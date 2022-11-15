@@ -28,9 +28,9 @@ public class Highway {
 
     public String toString() {
         return "Highway from " +
-                origin.toString() +
+                origin.getID() +
                 " to " +
-                target.toString() +
+                target.getID() +
                 " of length " +
                 length +
                 " and capacity " +
