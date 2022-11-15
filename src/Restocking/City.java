@@ -4,11 +4,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class City {
+    private int ID;
     private List<Highway> incoming;
     private List<Highway> outgoing;
     private List<Truck> in_city;
 
-    public City() {
+    public City(int id) {
+        ID = id;
         incoming = new LinkedList<>();
         outgoing = new LinkedList<>();
         in_city = new LinkedList<>();
@@ -27,5 +29,9 @@ public class City {
 
     public Truck leave(Truck t) {
         return in_city.remove(0);
+    }
+
+    public int getID() {
+        return ID;
     }
 }
