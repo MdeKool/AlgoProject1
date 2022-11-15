@@ -25,4 +25,15 @@ public class Highway {
     public Truck removeTruck() {
         return fill.remove(0);
     }
+
+    public String toString() {
+        return "Highway from " +
+                origin.toString() +
+                " to " +
+                target.toString() +
+                " of length " +
+                length +
+                " and capacity " +
+                capacity;
+    }
 }
