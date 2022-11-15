@@ -11,8 +11,7 @@ public class Graph {
 
     public Graph(int cit, int tim) {
         cities = new LinkedList<>();
-        cities.add(new City(0));
-        for (int i = 1; i < cit; i++) {
+        for (int i = 0; i < cit; i++) {
             cities.add(new City(i));
         }
         highways = new LinkedList<>();
