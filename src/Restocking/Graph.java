@@ -20,6 +20,7 @@ public class Graph {
 
     public void makeHighway(int cit1, int cit2, int len, int cap) {
         Highway hwy = new Highway(cities.get(cit1), cities.get(cit2), len, cap);
+        highways.add(hwy);
         cities.get(cit1).addOutgoing(hwy);
         cities.get(cit2).addIncoming(hwy);
     }
