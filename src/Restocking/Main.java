@@ -23,6 +23,8 @@ public class Main {
                             Integer.parseInt(input[3]));
             }
 
+            System.out.println(g.toString());
+
         } catch(IOException e) {
             System.out.println("An IOException occurred");
             e.printStackTrace();
