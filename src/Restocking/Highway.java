@@ -34,6 +34,6 @@ public class Highway {
                 " of length " +
                 length +
                 " and capacity " +
-                capacity;
+                capacity + "\n";
     }
 }
