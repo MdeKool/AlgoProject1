@@ -24,4 +24,19 @@ public class Graph {
         cities.get(cit1).addOutgoing(hwy);
         cities.get(cit2).addIncoming(hwy);
     }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Cities: ");
+        sb.append(cities.size());
+        sb.append("\nHighways: ");
+        sb.append(highways.size());
+        sb.append("\nTime: ");
+        sb.append(time);
+        sb.append("\n");
+        for (Highway h : highways) {
+            sb.append(h.toString());
+        }
+        return sb.toString();
+    }
 }
