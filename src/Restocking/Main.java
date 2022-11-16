@@ -20,7 +20,9 @@ public class Main {
                 g.makeHighway(input[0] + ';' + input[1] + ';' + input[2], Integer.valueOf(input[3]));
             }
 
+            System.out.println(g.toString());
 
+            new PathFinder(g).run();
 
         } catch(IOException e) {
             System.out.println("An IOException occurred");
