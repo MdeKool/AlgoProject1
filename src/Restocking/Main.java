@@ -25,6 +25,8 @@ public class Main {
 
             System.out.println(g.toString());
 
+            new PathFinder(g).run();
+
         } catch(IOException e) {
             System.out.println("An IOException occurred");
             e.printStackTrace();
