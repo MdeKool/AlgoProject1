@@ -25,6 +25,18 @@ public class Graph {
         cities.get(cit2).addIncoming(hwy);
     }
 
+    public List<City> getCities() {
+        return cities;
+    }
+
+    public List<Highway> getHighways() {
+        return highways;
+    }
+
+    public int getTime() {
+        return time;
+    }
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Cities: ");
