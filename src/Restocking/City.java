@@ -31,6 +31,14 @@ public class City {
         return in_city.remove(0);
     }
 
+    public List<Highway> getIncoming() {
+        return incoming;
+    }
+
+    public List<Highway> getOutgoing() {
+        return outgoing;
+    }
+
     public int getID() {
         return ID;
     }
