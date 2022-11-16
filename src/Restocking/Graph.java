@@ -5,9 +5,9 @@ import java.util.List;
 
 public class Graph {
 
-    private List<City> cities;
-    private List<Highway> highways;
-    private int time;
+    private final List<City> cities;
+    private final List<Highway> highways;
+    private final int time;
 
     public Graph(int cit, int tim) {
         cities = new LinkedList<>();
