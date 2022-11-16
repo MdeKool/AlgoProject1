@@ -17,10 +17,7 @@ public class Main {
             // Create highways
             while (reader.hasNextLine()) {
                 String[] input = reader.nextLine().split(" ");
-                g.makeHighway(Integer.parseInt(input[0]),
-                            Integer.parseInt(input[1]),
-                            Integer.parseInt(input[2]),
-                            Integer.parseInt(input[3]));
+                g.makeHighway(input[0] + ';' + input[1] + ';' + input[2], Integer.valueOf(input[3]));
             }
 
             System.out.println(g.toString());
