@@ -27,7 +27,7 @@ public class Highway {
     }
 
     public void addCapacity(Integer cap) {
-        capacity += Integer.valueOf(cap);
+        capacity += cap;
     }
 
     public City getOrigin() {
