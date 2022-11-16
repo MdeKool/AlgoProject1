@@ -7,7 +7,7 @@ public class Highway {
     private City origin;
     private City target;
     private final int length;
-    private final int capacity;
+    private int capacity;
     private List<Truck> fill;
 
     public Highway(City org, City tgt, int len, int cap) {
@@ -24,6 +24,10 @@ public class Highway {
 
     public Truck removeTruck() {
         return fill.remove(0);
+    }
+
+    public void addCapacity(Integer cap) {
+        capacity += Integer.valueOf(cap);
     }
 
     public City getOrigin() {
