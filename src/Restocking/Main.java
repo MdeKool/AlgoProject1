@@ -19,7 +19,7 @@ public class Main {
                 g.makeHighway(reader.nextLine());
             }
 
-            g.preprocces();
+            g.preprocess();
 
         } catch(IOException e) {
             System.out.println("An IOException occurred");

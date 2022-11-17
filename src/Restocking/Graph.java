@@ -24,7 +24,7 @@ public class Graph {
         int[] vars = Arrays.stream(variables).mapToInt(Integer::parseInt).toArray();
         int cap = vars[3];
         if (highwaysMap.containsKey(key)) {
-            highwaysMap.put(key, highwaysMap.get(key) + cap);
+            //highwaysMap.put(key, highwaysMap.get(key) + cap);
             this.highways.get(vars[0]).forEach(h -> { // TODO improve using i.e. binary-search
                 if (h.to() == vars[1] && h.length() == vars[2]) {
                     h.add_capacity(cap);
@@ -32,11 +32,15 @@ public class Graph {
             });
         } else {
             highwaysMap.put(key, cap);
+
+            // Binary-insert
+
+
             this.highways.get(vars[0]).add(new Highway(vars[0], vars[1], cap, vars[2], -1, -1));
         }
     }
 
-    public void preprocces() {
+    public void preprocess() {
         this.find_fastest_path(0, 0);
         System.out.println(this);
         System.out.println("Prune result:");
