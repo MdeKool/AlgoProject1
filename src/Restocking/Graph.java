@@ -1,10 +1,9 @@
 package Restocking;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Graph {
-    private int cities;
+    private final int cities;
     private final int time;
     private final Map<String, Integer> highwaysMap;
     private final ArrayList<LinkedList<Highway>> highways;
@@ -15,7 +14,7 @@ public class Graph {
 
         this.highways = new ArrayList<>(this.cities);
         for (int i = 0; i < cities; i++) {
-            highways.add(new LinkedList<Highway>());
+            highways.add(new LinkedList<>());
         }
 
         this.time = time;
