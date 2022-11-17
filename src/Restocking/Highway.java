@@ -8,15 +8,13 @@ public final class Highway {
     private int capacity;
     private final int length;
     private int fastest_path;
-    private final int time;
 
-    public Highway(int from, int to, int capacity, int length, int fastest_path, int time) {
+    public Highway(int from, int to, int capacity, int length, int fastest_path) {
         this.from = from;
         this.to = to;
         this.capacity = capacity;
         this.length = length;
         this.fastest_path = fastest_path;
-        this.time = time;
     }
 
     public int from() {
@@ -45,11 +43,6 @@ public final class Highway {
         this.fastest_path = t;
     }
 
-
-    public int time() {
-        return time;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
@@ -59,13 +52,12 @@ public final class Highway {
                 this.to == that.to &&
                 this.capacity == that.capacity &&
                 this.length == that.length &&
-                this.fastest_path == that.fastest_path &&
-                this.time == that.time;
+                this.fastest_path == that.fastest_path;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(from, to, capacity, length, fastest_path, time);
+        return Objects.hash(from, to, capacity, length, fastest_path);
     }
 
     @Override
@@ -75,7 +67,6 @@ public final class Highway {
                 "to=" + to + ", " +
                 "capacity=" + capacity + ", " +
                 "length=" + length + ", " +
-                "fastest_path=" + fastest_path + ", " +
-                "time=" + time + ']';
+                "fastest_path=" + fastest_path + ']';
     }
 }

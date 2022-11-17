@@ -36,7 +36,7 @@ public class Graph {
             // Binary-insert
 
 
-            this.highways.get(vars[0]).add(new Highway(vars[0], vars[1], cap, vars[2], -1, -1));
+            this.highways.get(vars[0]).add(new Highway(vars[0], vars[1], cap, vars[2], -1));
         }
     }
 
@@ -59,7 +59,6 @@ public class Graph {
         int min_result = -1;
 
         for (Highway highway : this.highways.get(source)) {
-
             int result = find_fastest_path(highway.to(), length + highway.length());
 
             if (min_result < 0 || (result < min_result && result > 0)) {
