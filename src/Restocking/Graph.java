@@ -49,7 +49,6 @@ public class Graph {
         if (length > this.time) {
             return -1;
         }
-//        System.out.println(source + " == " + (cities -1));
         if (source == cities - 1) {
             return length;
         }
@@ -66,8 +65,6 @@ public class Graph {
             if (result > 0 && (highway.fastest_path() < 0 || highway.fastest_path() > result)) {
                 highway.set_fastest_path(result);
             }
-//            System.out.println(highway);
-
         }
         return min_result;
     }
