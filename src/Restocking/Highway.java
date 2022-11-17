@@ -73,6 +73,7 @@ public final class Highway {
                 "to=" + to + ", " +
                 "capacity=" + capacity + ", " +
                 "length=" + length + ", " +
+                "min_dist=" + min_dist_to_dest + ", " +
                 "fastest_path=" + fastest_path + ']';
     }
 }
