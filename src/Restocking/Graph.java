@@ -11,12 +11,10 @@ public class Graph {
     public Graph(int cities, int time) {
         this.cities = cities;
         this.highwaysMap = new HashMap<>();
-
         this.highways = new ArrayList<>(this.cities);
         for (int i = 0; i < cities; i++) {
             highways.add(new LinkedList<>());
         }
-
         this.time = time;
     }
 
@@ -27,7 +25,7 @@ public class Graph {
         int cap = vars[3];
         if (highwaysMap.containsKey(key)) {
             highwaysMap.put(key, highwaysMap.get(key) + cap);
-            this.highways.get(vars[0]).forEach(h -> {
+            this.highways.get(vars[0]).forEach(h -> { // TODO improve using i.e. binary-search
                 if (h.to() == vars[1] && h.length() == vars[2]) {
                     h.add_capacity(cap);
                 }
@@ -40,7 +38,6 @@ public class Graph {
 
     public void prune() {
         this.BFS(0, 0);
-
         System.out.println(this);
         System.out.println("Prune result:");
         for (LinkedList<Highway> city : this.highways) {
@@ -84,7 +81,10 @@ public class Graph {
         sb.append("\nTime: ");
         sb.append(time);
         sb.append("\n");
-        highways.forEach(h -> sb.append("\n").append(h.toString()));
+        for (int i = 0; i < this.cities; i++) {
+            LinkedList<Highway> c = highways.get(i);
+            sb.append("\nCity ").append(i).append(" edges=").append(c.size()).append(": ").append(c);
+        }
 
         return sb.toString();
     }
