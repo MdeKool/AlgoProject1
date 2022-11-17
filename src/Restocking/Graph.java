@@ -7,13 +7,16 @@ public class Graph {
     private final int time;
     private final Map<String, Integer> highwaysMap;
     private final ArrayList<LinkedList<Highway>> highways;
+    private final List<List<List<Highway>>> flow;
 
     public Graph(int cities, int time) {
         this.cities = cities;
         this.highwaysMap = new HashMap<>();
         this.highways = new ArrayList<>(this.cities);
+        this.flow = new ArrayList<>(this.cities);
         for (int i = 0; i < cities; i++) {
             highways.add(new LinkedList<>());
+            flow.add(new ArrayList<>());
         }
         this.time = time;
     }
@@ -49,6 +52,11 @@ public class Graph {
         }
         System.out.println(this);
     }
+
+    public void process() {
+
+    }
+
     private int find_fastest_path(int source, int length) {
         if (length > this.time) {
             return -1;
