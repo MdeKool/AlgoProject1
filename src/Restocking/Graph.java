@@ -40,36 +40,33 @@ public class Graph {
             highwaysMap.put(key, cap);
 
             // Binary-insert
-
-
-            this.highways.get(vars[0]).add(new Highway(vars[0], vars[1], cap, vars[2], -1, -1));
+            this.highways.get(vars[0]).add(new Highway(vars[0], vars[1], cap, vars[2], Integer.MAX_VALUE));
         }
     }
 
     public void preprocess() {
-        this.find_fastest_path(0, 0, null);
-        System.out.println(this);
-        System.out.println("Prune result:");
+        this.find_paths(0, 0, null);
         for (List<Highway> city : this.highways) {
-            city.removeIf(h -> h.fastest_path() < 0);
+            city.removeIf(h -> h.min_dist_to_dest() < 0);
         }
-//        System.out.println(this);
+        System.out.println("Prune result:");
+        System.out.println(this);
     }
 
     public void process() {
         BitSet visited = new BitSet(this.cities*this.time);
         for (int t = 0; t < this.time; t++) {
-            visited.set(t*this.time);
+            visited.set(t*this.cities);
         }
 
         int added = 0;
         for (int c = 0; c < this.cities; c++) {
             for (int t = 0; t < this.time; t++) {
-                if (visited.get(c+t*this.time)) {
+                if (visited.get(c+t*this.cities)) {
                     for (Highway h : this.highways.get(c)) {
                         if (this.time >= t + h.min_dist_to_dest()) {
-                            this.flow.get(c+t*this.time).add(h);
-                            visited.set(h.to()+(t+h.length())*this.time);
+                            this.flow.get(c+t*this.cities).add(h);
+                            visited.set(h.to()+(t+h.length())*this.cities);
                             added++;
                         }
                     }
@@ -77,61 +74,59 @@ public class Graph {
             }
         }
 
-        System.out.println(visited);
         System.out.println("added: " + added);
         for (int c = 0; c < this.cities; c++) {
             for (int t = 0; t < this.time; t++) {
-                if (visited.get(c+t*this.time)) {
-                    System.out.println(c + "_" + t + "\t" + this.flow.get(c+t*this.time));
+                if (visited.get(c+t*this.cities) && this.flow.get(c+t*this.cities).size() > 0) {
+                    System.out.println(c + "_" + t + "\t" + this.flow.get(c+t*this.cities));
                 }
             }
         }
     }
 
-    private int find_fastest_path(int source, int length, Highway pred) {
-        if (length > this.time) {
+    private int find_paths(int source, int length, Highway pred) {
+        if (length > this.time) { // no path
+            pred.set_min_dist_to_dest(-1);
             return -1;
         }
-        if (source == cities - 1) {
-            if (pred != null) {
-                if (pred.min_dist_to_dest() == -1) {
-                    pred.set_min_dist_to_dest(pred.length());
-                } else {
-                    pred.set_min_dist_to_dest(Math.min(pred.min_dist_to_dest(), pred.length()));
-                }
-            }
-            return length;
+
+        if (source == cities - 1 && pred != null) {
+            pred.set_min_dist_to_dest(pred.length());
+            return pred.length();
         }
-        int min_result = -1;
+
+        int shortest_child_path = Integer.MAX_VALUE;
         for (Highway highway : this.highways.get(source)) {
-            int result = find_fastest_path(highway.to(), length + highway.length(), highway);
-
-            if (min_result < 0 || (result < min_result && result > 0)) {
-                min_result = result;
+            if (highway.min_dist_to_dest() < 0) {
+                // no solution
+                continue;
             }
 
-            if (result > 0 && (highway.fastest_path() < 0 || highway.fastest_path() > result)) {
-                highway.set_fastest_path(result);
+            if (highway.min_dist_to_dest() <= this.time) {
+                // already discovered
+                shortest_child_path = Math.min(shortest_child_path, highway.min_dist_to_dest());
+                continue;
             }
+
+            // discover
+            int result = find_paths(highway.to(), length + highway.length(), highway);
+            if (result < 0) continue; // ignore path with no solution
+
+            shortest_child_path = Math.min(shortest_child_path, result);
         }
 
-        int min_dest_to_source_branch = this.highways.get(source).stream().
-                mapToInt(Highway::min_dist_to_dest)
-                .min()
-                .orElse(-1);
-
-        if (min_dest_to_source_branch <= 0) {
-            return min_result;
+        if (shortest_child_path > this.time) {
+            // no path was found
+            if (pred != null)
+                pred.set_min_dist_to_dest(-1);
+            return -1;
         }
 
         if (pred != null) {
-            if (pred.min_dist_to_dest() == -1) {
-                pred.set_min_dist_to_dest(pred.length() + min_dest_to_source_branch);
-            } else {
-                pred.set_min_dist_to_dest(Math.min(pred.min_dist_to_dest(), pred.length()) + min_dest_to_source_branch );
-            }
+            pred.set_min_dist_to_dest(shortest_child_path + pred.length());
+            return shortest_child_path + pred.length();
         }
-        return min_result;
+        return shortest_child_path;
     }
 
     public String toString() {
@@ -139,7 +134,7 @@ public class Graph {
         sb.append("Cities: ");
         sb.append(cities);
         sb.append("\nHighways: ");
-        sb.append(highways.size());
+        sb.append(highways.stream().map(List::size).reduce(0, Integer::sum));
         sb.append("\nTime: ");
         sb.append(time);
         sb.append("\n");
