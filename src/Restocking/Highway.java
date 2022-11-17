@@ -5,7 +5,7 @@ import java.util.Objects;
 public final class Highway {
     private final int from;
     private final int to;
-    private final int capacity;
+    private int capacity;
     private final int length;
     private int fastest_path;
     private final int time;
@@ -30,6 +30,8 @@ public final class Highway {
     public int capacity() {
         return capacity;
     }
+
+    public void add_capacity(int capacity) { this.capacity += capacity; }
 
     public int length() {
         return length;

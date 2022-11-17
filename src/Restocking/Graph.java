@@ -7,18 +7,15 @@ public class Graph {
     private int cities;
     private final int time;
     private final Map<String, Integer> highwaysMap;
-    private List<Highway> highways;
-    private final LinkedList[] adjacency;
+    private final ArrayList<LinkedList<Highway>> highways;
 
     public Graph(int cities, int time) {
         this.cities = cities;
-
         this.highwaysMap = new HashMap<>();
-        this.highways = new ArrayList<>();
 
-        this.adjacency = new LinkedList[cities];
+        this.highways = new ArrayList<>(this.cities);
         for (int i = 0; i < cities; i++) {
-            adjacency[i] = new LinkedList();
+            highways.add(new LinkedList<Highway>());
         }
 
         this.time = time;
@@ -27,27 +24,29 @@ public class Graph {
     public void makeHighway(String input) {
         String[] variables = input.split(" ");
         String key =  variables[0] + ';' + variables[1] + ';' + variables[2];
-        int cap = Integer.parseInt(variables[3]);
+        int[] vars = Arrays.stream(variables).mapToInt(Integer::parseInt).toArray();
+        int cap = vars[3];
         if (highwaysMap.containsKey(key)) {
             highwaysMap.put(key, highwaysMap.get(key) + cap);
+            this.highways.get(vars[0]).forEach(h -> {
+                if (h.to() == vars[1] && h.length() == vars[2]) {
+                    h.add_capacity(cap);
+                }
+            });
         } else {
             highwaysMap.put(key, cap);
-            adjacency[Integer.parseInt(variables[0])].add(variables[1] + ';' + variables[2]);
+            this.highways.get(vars[0]).add(new Highway(vars[0], vars[1], cap, vars[2], -1, -1));
         }
     }
 
     public void prune() {
-
-        highwaysMap.forEach((key1, value) -> {
-            Object[] key = Arrays.stream(key1.split(";")).map(Integer::parseInt).toArray();
-            highways.add(new Highway((int) key[0], (int) key[1], value, (int) key[2], -1, -1));
-        });
-
         this.BFS(0, 0);
 
         System.out.println(this);
         System.out.println("Prune result:");
-        this.highways.removeIf(h -> h.fastest_path() < 0);
+        for (LinkedList<Highway> city : this.highways) {
+            city.removeIf(h -> h.fastest_path() < 0);
+        }
         System.out.println(this);
     }
     private int BFS(int source, int length) {
@@ -59,34 +58,15 @@ public class Graph {
             return length;
         }
         int min_result = -1;
-        String adj;
-        String[] adj1;
-        int edge_length, neighbour;
-//        System.out.println(adjacency[source]);
-        for (Object o : adjacency[source]) {
-            adj = (String) o;
-            adj1 = adj.split(";");
-            neighbour = Integer.parseInt(adj1[0]);
-            edge_length = Integer.parseInt(adj1[1]);
 
-//            System.out.println("BFS: " + source + " to " + neighbour + ";" + (length + edge_length));
-            int result = BFS(neighbour, length + edge_length);
-//            System.out.println("BFS: " + source + " to " + neighbour + ";" + (length + edge_length) + "->" + result);
+        for (Highway highway : this.highways.get(source)) {
 
-//            System.out.println(min_result + "|" + result);
+            int result = BFS(highway.to(), length + highway.length());
+
             if (min_result < 0 || (result < min_result && result > 0)) {
                 min_result = result;
             }
-//            System.out.println(min_result);
 
-            Highway highway = null;
-//            System.out.println("search " + source + "->" + neighbour);
-            for (Highway h : highways) {
-                if (h.from() == source && h.to() == neighbour) {
-                    highway = h;
-                }
-            }
-            assert highway != null;
             if (result > 0 && (highway.fastest_path() < 0 || highway.fastest_path() > result)) {
                 highway.set_fastest_path(result);
             }
