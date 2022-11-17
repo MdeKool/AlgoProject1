@@ -36,8 +36,8 @@ public class Graph {
         }
     }
 
-    public void prune() {
-        this.BFS(0, 0);
+    public void preprocces() {
+        this.find_fastest_path(0, 0);
         System.out.println(this);
         System.out.println("Prune result:");
         for (LinkedList<Highway> city : this.highways) {
@@ -45,7 +45,7 @@ public class Graph {
         }
         System.out.println(this);
     }
-    private int BFS(int source, int length) {
+    private int find_fastest_path(int source, int length) {
         if (length > this.time) {
             return -1;
         }
@@ -56,7 +56,7 @@ public class Graph {
 
         for (Highway highway : this.highways.get(source)) {
 
-            int result = BFS(highway.to(), length + highway.length());
+            int result = find_fastest_path(highway.to(), length + highway.length());
 
             if (min_result < 0 || (result < min_result && result > 0)) {
                 min_result = result;
