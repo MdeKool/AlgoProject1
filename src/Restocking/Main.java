@@ -16,13 +16,10 @@ public class Main {
 
             // Create highways
             while (reader.hasNextLine()) {
-                String[] input = reader.nextLine().split(" ");
-                g.makeHighway(input[0] + ';' + input[1] + ';' + input[2], Integer.valueOf(input[3]));
+                g.makeHighway(reader.nextLine());
             }
 
-            System.out.println(g.toString());
-
-            new PathFinder(g).run();
+            g.prune();
 
         } catch(IOException e) {
             System.out.println("An IOException occurred");

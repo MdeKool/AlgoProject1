@@ -1,67 +1,79 @@
 package Restocking;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Objects;
 
-public class Highway {
-    private City origin;
-    private City target;
+public final class Highway {
+    private final int from;
+    private final int to;
+    private final int capacity;
     private final int length;
-    private int capacity;
-    private List<Truck> fill;
+    private int fastest_path;
+    private final int time;
 
-    public Highway(City org, City tgt, int len, int cap) {
-        origin = org;
-        target = tgt;
-        length = len;
-        capacity = cap;
-        fill = new LinkedList<>();
+    public Highway(int from, int to, int capacity, int length, int fastest_path, int time) {
+        this.from = from;
+        this.to = to;
+        this.capacity = capacity;
+        this.length = length;
+        this.fastest_path = fastest_path;
+        this.time = time;
     }
 
-    public void addTruck(Truck t) {
-        fill.add(t);
+    public int from() {
+        return from;
     }
 
-    public Truck removeTruck() {
-        return fill.remove(0);
+    public int to() {
+        return to;
     }
 
-    public void addCapacity(Integer cap) {
-        capacity += cap;
-    }
-
-    public City getOrigin() {
-        return origin;
-    }
-
-    public void setOrigin(City origin) {
-        this.origin = origin;
-    }
-
-    public City getTarget() {
-        return target;
-    }
-
-    public void setTarget(City target) {
-        this.target = target;
-    }
-
-    public int getLength() {
-        return length;
-    }
-
-    public int getCapacity() {
+    public int capacity() {
         return capacity;
     }
 
+    public int length() {
+        return length;
+    }
+
+    public int fastest_path() {
+        return fastest_path;
+    }
+
+    public void set_fastest_path(int t) {
+        this.fastest_path = t;
+    }
+
+
+    public int time() {
+        return time;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (Highway) obj;
+        return this.from == that.from &&
+                this.to == that.to &&
+                this.capacity == that.capacity &&
+                this.length == that.length &&
+                this.fastest_path == that.fastest_path &&
+                this.time == that.time;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(from, to, capacity, length, fastest_path, time);
+    }
+
+    @Override
     public String toString() {
-        return "Highway from " +
-                origin.getID() +
-                " to " +
-                target.getID() +
-                " of length " +
-                length +
-                " and capacity " +
-                capacity + "\n";
+        return "Highway[" +
+                "from=" + from + ", " +
+                "to=" + to + ", " +
+                "capacity=" + capacity + ", " +
+                "length=" + length + ", " +
+                "fastest_path=" + fastest_path + ", " +
+                "time=" + time + ']';
     }
 }
