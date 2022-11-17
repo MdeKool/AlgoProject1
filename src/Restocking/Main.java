@@ -20,6 +20,7 @@ public class Main {
             }
 
             g.preprocess();
+            g.process();
 
         } catch(IOException e) {
             System.out.println("An IOException occurred");
