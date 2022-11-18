@@ -7,6 +7,8 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         try {
+            long st = System.nanoTime();
+
             File infile = new File(args[0]);
             Scanner reader = new Scanner(infile);
 
@@ -19,8 +21,14 @@ public class Main {
                 g.makeHighway(reader.nextLine());
             }
 
+            System.out.println(g);
             g.preprocess();
             g.process();
+            //g.EdmondsKarp();
+
+            long et = System.nanoTime();
+
+            System.out.println("Duration: " + (et - st)/1000000 + " ms");
 
         } catch(IOException e) {
             System.out.println("An IOException occurred");

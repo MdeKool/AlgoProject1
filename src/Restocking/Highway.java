@@ -8,6 +8,7 @@ public final class Highway {
     private int capacity;
     private final int length;
     private int min_dist_to_dest;
+    private int fastest_path = Integer.MAX_VALUE;
 
     public Highway(int from, int to, int capacity, int length, int min_dist_to_dest) {
         this.from = from;
@@ -38,6 +39,14 @@ public final class Highway {
     public int min_dist_to_dest() { return min_dist_to_dest; }
 
     public void set_min_dist_to_dest(int min) { this.min_dist_to_dest = min; }
+
+    public int fastest_path() {
+        return this.fastest_path;
+    }
+
+    public void set_fastest_path(int length) {
+        this.fastest_path = length;
+    }
 
     @Override
     public boolean equals(Object obj) {

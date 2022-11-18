@@ -38,16 +38,14 @@ public class Graph {
             });
         } else {
             highwaysMap.put(key, cap);
-
-            // Binary-insert
             this.highways.get(vars[0]).add(new Highway(vars[0], vars[1], cap, vars[2], Integer.MAX_VALUE));
         }
     }
 
     public void preprocess() {
-        this.find_paths(0, 0, null);
+        this.find_paths2(0, 0, null);
         for (List<Highway> city : this.highways) {
-            city.removeIf(h -> h.min_dist_to_dest() < 0);
+            city.removeIf(h -> h.min_dist_to_dest() < 0 || h.fastest_path() > this.time);
         }
         System.out.println("Prune result:");
         System.out.println(this);
@@ -84,7 +82,7 @@ public class Graph {
         }
     }
 
-    private int find_paths(int source, int length, Highway pred) {
+    private int find_paths2(int source, int length, Highway pred) {
         if (length > this.time) { // no path
             pred.set_min_dist_to_dest(-1);
             return -1;
@@ -97,10 +95,6 @@ public class Graph {
 
         int shortest_child_path = Integer.MAX_VALUE;
         for (Highway highway : this.highways.get(source)) {
-            if (highway.min_dist_to_dest() < 0) {
-                // no solution
-                continue;
-            }
 
             if (highway.min_dist_to_dest() <= this.time) {
                 // already discovered
@@ -109,7 +103,7 @@ public class Graph {
             }
 
             // discover
-            int result = find_paths(highway.to(), length + highway.length(), highway);
+            int result = find_paths2(highway.to(), length + highway.length(), highway);
             if (result < 0) continue; // ignore path with no solution
 
             shortest_child_path = Math.min(shortest_child_path, result);
@@ -127,6 +121,74 @@ public class Graph {
             return shortest_child_path + pred.length();
         }
         return shortest_child_path;
+    }
+
+    private int find_paths(int source, int length, Highway pred) {
+        if (length > this.time) { // no path
+            return -1;
+        }
+
+        if (source == cities - 1 && pred != null) {
+            pred.set_min_dist_to_dest(pred.length());
+            pred.set_fastest_path(pred.length());
+            return pred.length();
+        }
+
+        int shortest_child_path = Integer.MAX_VALUE;
+        int fastest_path = Integer.MAX_VALUE;
+        for (Highway highway : this.highways.get(source)) {
+            if (highway.fastest_path() < length + highway.min_dist_to_dest()) {
+                // faster path already exists, branch has been explored
+                continue;
+            }
+
+            if (highway.min_dist_to_dest() <= this.time) {
+                // already discovered
+                shortest_child_path = Math.min(shortest_child_path, highway.min_dist_to_dest());
+                continue;
+            }
+
+            // discover
+            int result = find_paths(highway.to(), length + highway.length(), highway);
+            if (result < 0) continue; // ignore path with no solution
+
+            shortest_child_path = Math.min(shortest_child_path, result);
+            fastest_path = (Math.min(fastest_path, highway.fastest_path()));
+        }
+
+        if (shortest_child_path > this.time) {
+            // no path was found
+            if (pred != null)
+                pred.set_min_dist_to_dest(-1);
+            return -1;
+        }
+
+        if (pred != null) {
+            if (shortest_child_path > 0 ) {
+                pred.set_min_dist_to_dest(shortest_child_path + pred.length());
+            }
+            pred.set_fastest_path(fastest_path);
+            return shortest_child_path + pred.length();
+        }
+        return shortest_child_path;
+    }
+
+    public int edmondsKarp() {
+        int s = 0;
+        int t = cities - 1;
+        int flow = 0;
+
+        Queue<Integer> q = new LinkedList<>();
+        q.add(s);
+
+        Highway[] pred = new Highway[this.flow.size()];
+
+        while(!q.isEmpty()) {
+            Integer cur = q.poll();
+            for (Highway h : this.flow.get(cur));
+        }
+
+        return -1;
     }
 
     public String toString() {
