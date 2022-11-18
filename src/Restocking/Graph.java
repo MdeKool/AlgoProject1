@@ -5,6 +5,7 @@ import java.util.*;
 public class Graph {
     private final int cities;
     private final int time;
+    private final int MAX_VALUE = 50*1000;
     private final Map<String, Integer> highwaysMap;
     private final List<List<Highway>> highways;
     private final List<List<Highway>> flow;
@@ -29,6 +30,9 @@ public class Graph {
         String key =  variables[0] + ';' + variables[1] + ';' + variables[2];
         int[] vars = Arrays.stream(variables).mapToInt(Integer::parseInt).toArray();
         int cap = vars[3];
+        if (cap < 1) {
+            return; // do not add useless highway.
+        }
         if (highwaysMap.containsKey(key)) {
             //highwaysMap.put(key, highwaysMap.get(key) + cap);
             this.highways.get(vars[0]).forEach(h -> { // TODO improve using i.e. binary-search
@@ -38,12 +42,12 @@ public class Graph {
             });
         } else {
             highwaysMap.put(key, cap);
-            this.highways.get(vars[0]).add(new Highway(vars[0], vars[1], cap, vars[2], Integer.MAX_VALUE));
+            this.highways.get(vars[0]).add(new Highway(vars[0], vars[1], cap, vars[2], MAX_VALUE, MAX_VALUE));
         }
     }
 
     public void preprocess() {
-        this.find_paths2(0, 0, null);
+        this.find_paths(0, 0, new Highway(0, 0, 0, 0, MAX_VALUE, MAX_VALUE));
         for (List<Highway> city : this.highways) {
             city.removeIf(h -> h.min_dist_to_dest() < 0 || h.fastest_path() > this.time);
         }
@@ -82,95 +86,41 @@ public class Graph {
         }
     }
 
-    private int find_paths2(int source, int length, Highway pred) {
-        if (length > this.time) { // no path
-            pred.set_min_dist_to_dest(-1);
-            return -1;
-        }
-
-        if (source == cities - 1 && pred != null) {
-            pred.set_min_dist_to_dest(pred.length());
-            return pred.length();
-        }
-
-        int shortest_child_path = Integer.MAX_VALUE;
-        for (Highway highway : this.highways.get(source)) {
-
-            if (highway.min_dist_to_dest() <= this.time) {
-                // already discovered
-                shortest_child_path = Math.min(shortest_child_path, highway.min_dist_to_dest());
-                continue;
-            }
-
-            // discover
-            int result = find_paths2(highway.to(), length + highway.length(), highway);
-            if (result < 0) continue; // ignore path with no solution
-
-            shortest_child_path = Math.min(shortest_child_path, result);
-        }
-
-        if (shortest_child_path > this.time) {
-            // no path was found
-            if (pred != null)
-                pred.set_min_dist_to_dest(-1);
-            return -1;
-        }
-
-        if (pred != null) {
-            pred.set_min_dist_to_dest(shortest_child_path + pred.length());
-            return shortest_child_path + pred.length();
-        }
-        return shortest_child_path;
-    }
-
     private int find_paths(int source, int length, Highway pred) {
         if (length > this.time) { // no path
             return -1;
         }
 
-        if (source == cities - 1 && pred != null) {
+        if (source == cities - 1) {
             pred.set_min_dist_to_dest(pred.length());
-            pred.set_fastest_path(pred.length());
+            pred.set_fastest_path(Math.min(pred.fastest_path() ,length));
             return pred.length();
         }
 
-        int shortest_child_path = Integer.MAX_VALUE;
-        int fastest_path = Integer.MAX_VALUE;
+        int shortest_child_path = MAX_VALUE;
+        int fastest_path = MAX_VALUE;
         for (Highway highway : this.highways.get(source)) {
-            if (highway.fastest_path() < length + highway.min_dist_to_dest()) {
-                // faster path already exists, branch has been explored
-                continue;
-            }
-
-            if (highway.min_dist_to_dest() <= this.time) {
-                // already discovered
-                shortest_child_path = Math.min(shortest_child_path, highway.min_dist_to_dest());
-                continue;
-            }
 
             // discover
-            int result = find_paths(highway.to(), length + highway.length(), highway);
+            int result;
+            if ( highway.min_dist_to_dest() >= MAX_VALUE
+                    || highway.fastest_path() - highway.min_dist_to_dest() > length) {
+                result = find_paths(highway.to(), length + highway.length(), highway);
+            } else {
+                result = highway.min_dist_to_dest();
+            }
+
             if (result < 0) continue; // ignore path with no solution
 
             shortest_child_path = Math.min(shortest_child_path, result);
             fastest_path = (Math.min(fastest_path, highway.fastest_path()));
         }
 
-        if (shortest_child_path > this.time) {
-            // no path was found
-            if (pred != null)
-                pred.set_min_dist_to_dest(-1);
-            return -1;
+        if (shortest_child_path > 0 ) {
+            pred.set_min_dist_to_dest(shortest_child_path + pred.length());
         }
-
-        if (pred != null) {
-            if (shortest_child_path > 0 ) {
-                pred.set_min_dist_to_dest(shortest_child_path + pred.length());
-            }
-            pred.set_fastest_path(fastest_path);
-            return shortest_child_path + pred.length();
-        }
-        return shortest_child_path;
+        pred.set_fastest_path(fastest_path);
+        return shortest_child_path + pred.length();
     }
 
     public int edmondsKarp() {

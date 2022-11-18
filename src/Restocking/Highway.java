@@ -8,14 +8,15 @@ public final class Highway {
     private int capacity;
     private final int length;
     private int min_dist_to_dest;
-    private int fastest_path = Integer.MAX_VALUE;
+    private int fastest_path;
 
-    public Highway(int from, int to, int capacity, int length, int min_dist_to_dest) {
+    public Highway(int from, int to, int capacity, int length, int min_dist_to_dest, int fastest_path) {
         this.from = from;
         this.to = to;
         this.capacity = capacity;
         this.length = length;
         this.min_dist_to_dest = min_dist_to_dest;
+        this.fastest_path = fastest_path;
     }
 
     public int from() {
