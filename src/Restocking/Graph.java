@@ -1,6 +1,8 @@
 package Restocking;
 
 import java.util.*;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Graph {
     private final int cities;
@@ -16,7 +18,7 @@ public class Graph {
         this.highways = new ArrayList<>(cities);
         this.flow = new ArrayList<>(cities*time);
         for (int c = 0; c < cities; c++) {
-            LinkedList<Highway> outgoing = new LinkedList<>();
+            List<Highway> outgoing = new LinkedList<>();
             highways.add(outgoing);
             for (int t = 0; t < time; t++) {
                 flow.add(new LinkedList<>());
@@ -67,7 +69,14 @@ public class Graph {
                 if (visited.get(c+t*this.cities)) {
                     for (Highway h : this.highways.get(c)) {
                         if (this.time >= t + h.min_dist_to_dest()) {
-                            this.flow.get(c+t*this.cities).add(h);
+                            List<Highway> lh = this.flow.get(c+t*this.cities);
+                            Highway nh = new Highway(c+t*this.cities,
+                                    h.to() + (t + h.length()) * this.time,
+                                    h.capacity(),
+                                    h.length(),
+                                    h.min_dist_to_dest(),
+                                    h.fastest_path());
+                            lh.add(nh);
                             visited.set(h.to()+(t+h.length())*this.cities);
                             added++;
                         }
@@ -124,21 +133,63 @@ public class Graph {
     }
 
     public int edmondsKarp() {
-        int s = 0;
-        int t = cities - 1;
-        int flow = 0;
+        int max_flow = 0;
 
-        Queue<Integer> q = new LinkedList<>();
-        q.add(s);
+        int[] sources = new int[this.time];
+        Arrays.setAll(sources, p -> p * this.time);
+        int[] sinks = new int[this.time];
+        Arrays.setAll(sinks, p -> (p+1) * this.time - 1);
 
-        Highway[] pred = new Highway[this.flow.size()];
+        LinkedList<Integer>[] pred = new LinkedList[this.flow.size()];
 
-        while(!q.isEmpty()) {
-            Integer cur = q.poll();
-            for (Highway h : this.flow.get(cur));
+        Stack<Integer> q = new Stack<>();
+
+        for (int source : sources) {
+            q.push(source);
+
+            while(!q.isEmpty()) {
+                Integer cur = q.pop();
+
+                for (Highway h : this.flow.get(cur)) {
+                    if (h.to() < this.time*this.cities && h.to() % this.cities != 0 && h.capacity() > h.flow()) {
+                        if (pred[h.to()] == null) {
+                            pred[h.to()] = new LinkedList<>();
+                        }
+                        pred[h.to()].add(h.from());
+                        q.push(h.to());
+                    }
+                }
+            }
         }
 
-        return -1;
+        for (int sink : sinks) {
+            if (pred[sink] != null) {
+                int df = Integer.MAX_VALUE;
+
+                q.addAll(pred[sink]);
+
+                while(!q.isEmpty()) {
+                    Integer cur = q.pop();
+
+                    List<Highway> lh = this.flow.get(cur);
+                    for ( int i = 0; i < lh.size(); i++ ) {
+                        if ( lh.get(i).to() != sink ) {
+                            lh.remove(lh.get(i));
+                            i--;
+                        }
+                    }
+
+                    df = Math.min(df, lh.stream().mapToInt(Highway::capacity).sum());
+
+                    sink = cur;
+                }
+
+
+
+            }
+        }
+
+        return max_flow;
     }
 
     public String toString() {

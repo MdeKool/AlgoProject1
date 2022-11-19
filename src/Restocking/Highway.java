@@ -9,6 +9,7 @@ public final class Highway {
     private final int length;
     private int min_dist_to_dest;
     private int fastest_path;
+    private int flow;
 
     public Highway(int from, int to, int capacity, int length, int min_dist_to_dest, int fastest_path) {
         this.from = from;
@@ -17,6 +18,7 @@ public final class Highway {
         this.length = length;
         this.min_dist_to_dest = min_dist_to_dest;
         this.fastest_path = fastest_path;
+        this.flow = 0;
     }
 
     public int from() {
@@ -47,6 +49,15 @@ public final class Highway {
 
     public void set_fastest_path(int length) {
         this.fastest_path = length;
+    }
+
+    public int flow() {
+        return this.flow;
+    }
+
+    public int addFlow(int f) {
+        this.flow += Math.min(this.capacity, f);
+        return Math.max(0, f - this.flow);
     }
 
     @Override
