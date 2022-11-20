@@ -152,9 +152,8 @@ public class Graph {
     }
 
     public int dinic() {
-
-
         List<List<Integer>> level_graph = new LinkedList<>();
+        List<List<Integer>> paths = new LinkedList<>();
         List<Integer> level_0 = new LinkedList<>();
         for ( int t = 0; t <= this.time; t++ ) {
             level_0.add(t*this.cities);
@@ -163,6 +162,7 @@ public class Graph {
                 .filter(x -> this.flow.get(x).size() > 0)
                 .toList());
 
+        // Make level graph (i.e, graph of all shortest paths)
         for ( int i = 0; level_graph.get(i).size() != 0; ++i ) {
             List<Integer> cur_level = level_graph.get(i);
             List<Integer> next_level = new LinkedList<>();
@@ -182,7 +182,16 @@ public class Graph {
             }
         }
 
+        // Fill each path
+        for ( List<Integer> path : paths ){
+            recursive_dinic(level_graph, path);
+        }
+
         return 0 + dinic();
+    }
+
+    private int recursive_dinic(List<List<Integer>> level_graph, List<Integer> path) {
+        List<>
     }
 
     private void create_time_expanded_graph() {
