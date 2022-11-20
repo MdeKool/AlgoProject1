@@ -22,9 +22,8 @@ public class Main {
             }
 
             System.out.println(g);
-            g.preprocess();
-            g.process();
-            g.edmondsKarp();
+            int result = g.run();
+            System.out.println(result);
 
             long et = System.nanoTime();
 
