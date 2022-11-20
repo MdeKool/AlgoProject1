@@ -9,6 +9,7 @@ public class Graph {
     private final Map<String, Integer> highwaysMap;
     private final List<List<Highway>> highways;
     private final List<List<Highway>> flow;
+    private int shortest_path = MAX_VALUE;
 
     public Graph(int cities, int time) {
         this.cities = cities;
@@ -46,10 +47,15 @@ public class Graph {
         }
     }
 
-    public void preprocess() {
+    public int run() {
+        this.preprocess();
+        return this.edmondsKarp();
+    }
+
+    private void preprocess() {
         this.find_paths(0, 0, new Highway(0, 0, 0, 0, MAX_VALUE, MAX_VALUE));
-        for (List<Highway> city : this.highways) {
-            city.removeIf(h -> h.min_dist_to_dest() < 0 || h.fastest_path() > this.time);
+        for (List<Highway> city : this.highways) { // removed legacy check:  h.min_dist_to_dest() < 0 ||
+            city.removeIf(h -> h.min_dist_to_dest() > this.time || h.fastest_path() > this.time);
         }
 //        System.out.println("Prune result:");
 //        System.out.println(this);
@@ -91,40 +97,46 @@ public class Graph {
 //                }
 //            }
 //        }
+
+        System.out.println("Prune result:");
+        System.out.println(this);
+//        create_time_expanded_graph();
     }
 
     private int find_paths(int source, int length, Highway pred) {
-        if (length > this.time) { // no path
+        if (length > this.time) // no path with length < time
             return -1;
-        }
 
-        if (source == cities - 1) {
+        if (source == cities - 1) { // destination reached, update accordingly
             pred.set_min_dist_to_dest(pred.length());
-            pred.set_fastest_path(Math.min(pred.fastest_path() ,length));
+            pred.set_fastest_path(Math.min(pred.fastest_path(), length));
+            this.shortest_path = Math.min(this.shortest_path, pred.fastest_path());
             return pred.length();
         }
 
         int shortest_child_path = MAX_VALUE;
         int fastest_path = MAX_VALUE;
-        for (Highway highway : this.highways.get(source)) {
-
-            // discover
+        for (Highway highway : this.highways.get(source))
+        { // for each highway leaving city[source]
             int result;
+            // if a search that is minimally as deep as we can search has already been done, re-use that result
             if ( highway.min_dist_to_dest() >= MAX_VALUE
                     || highway.fastest_path() - highway.min_dist_to_dest() > length) {
                 result = find_paths(highway.to(), length + highway.length(), highway);
-            } else {
+            } else { // otherwise: search
                 result = highway.min_dist_to_dest();
             }
-
             if (result < 0) continue; // ignore path with no solution
 
+            // minimize on result
             shortest_child_path = Math.min(shortest_child_path, result);
             fastest_path = (Math.min(fastest_path, highway.fastest_path()));
         }
 
         if (shortest_child_path > 0 ) {
             pred.set_min_dist_to_dest(shortest_child_path + pred.length());
+        } else { // negative weight cycle detected
+            System.out.println(source + " has a negative shortest path, negative weight cycle?");
         }
         pred.set_fastest_path(fastest_path);
         return shortest_child_path + pred.length();
@@ -161,13 +173,12 @@ public class Graph {
         }
 
         for (int sink : sinks) {
+            int t_sink = sink;
             if (pred[sink] != null) {
                 List<Integer> path = new LinkedList<>();
                 this.ek(path, sink, pred);
             }
         }
-
-
 
         return this.flow.stream()
                 .mapToInt(lh -> lh.stream()
@@ -177,12 +188,12 @@ public class Graph {
                 .sum();
     }
 
+
     private void ek(List<Integer> path, int p, List<Integer>[] pred) {
         path.add(0, p);
         if ( pred[p] != null ) {
             for (Integer x : pred[p]) {
                 this.ek(path, x, pred);
-
             }
         } else {
             int df = Integer.MAX_VALUE;
