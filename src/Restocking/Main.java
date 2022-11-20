@@ -22,8 +22,12 @@ public class Main {
             }
 
             System.out.println(g);
-            int result = g.run();
-            System.out.println(result);
+            g.preprocess();
+            g.process();
+            g.dinic();
+
+            //int result = g.run();
+            //System.out.println(result);
 
             long et = System.nanoTime();
 

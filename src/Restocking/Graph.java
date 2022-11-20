@@ -47,16 +47,69 @@ public class Graph {
         }
     }
 
+    public int run() {
+        this.preprocess();
+        return this.dinic();
+    }
+
     public void preprocess() {
         long st = System.nanoTime();
-        
-        System.out.println("Prune result:");
-        System.out.println(this);
-        
+        this.find_paths(0, 0, new Highway(0, 0, 0, 0, MAX_VALUE, MAX_VALUE));
+        for (List<Highway> city : this.highways) {
+            city.removeIf(h -> h.min_dist_to_dest() < 0 || h.fastest_path() > this.time);
+        }
         long et = System.nanoTime();
-        System.out.println("preprocess(): " + (et - st)/1000000 + " ms");
-        
-        create_time_expanded_graph();
+
+        System.out.println("Preprocess(): " + (et - st)/1000000 + "ms");
+//        System.out.println("Prune result:");
+//        System.out.println(this);
+
+//        long st = System.nanoTime();
+//
+//        System.out.println("Prune result:");
+//        System.out.println(this);
+//
+//        long et = System.nanoTime();
+//        System.out.println("preprocess(): " + (et - st)/1000000 + " ms");
+//
+//        create_time_expanded_graph();
+    }
+
+    public void process() {
+        BitSet visited = new BitSet(this.cities*this.time);
+        for (int t = 0; t < this.time; t++) {
+            visited.set(t*this.cities);
+        }
+        int added = 0;
+        for (int c = 0; c < this.cities; c++) {
+            for (int t = 0; t < this.time; t++) {
+                if (visited.get(c+t*this.cities)) {
+                    for (Highway h : this.highways.get(c)) {
+                        if (this.time >= t + h.min_dist_to_dest()) {
+                            List<Highway> lh = this.flow.get(c+t*this.cities);
+                            Highway nh = new Highway(c+t*this.cities,
+                                    h.to() + (t + h.length()) * this.cities,
+                                    h.capacity(),
+                                    h.length(),
+                                    h.min_dist_to_dest(),
+                                    h.fastest_path());
+                            lh.add(nh);
+                            visited.set(h.to()+(t+h.length())*this.cities);
+                            added++;
+                        }
+                    }
+                }
+            }
+        }
+
+//        System.out.println("added: " + added);
+//        for (int c = 0; c < this.cities; c++) {
+//            for (int t = 0; t < this.time; t++) {
+//                if (visited.get(c+t*this.cities) && this.flow.get(c+t*this.cities).size() > 0) {
+//                    System.out.println(c + "_" + t + "\t" + this.flow.get(c+t*this.cities));
+//                }
+//            }
+//        }
     }
 
     private int find_paths(int source, int length, Highway pred) {
@@ -106,17 +159,25 @@ public class Graph {
         for ( int t = 0; t <= this.time; t++ ) {
             level_0.add(t*this.cities);
         }
-        level_graph.add(level_0);
+        level_graph.add(level_0.stream()
+                .filter(x -> this.flow.get(x).size() > 0)
+                .toList());
 
         for ( int i = 0; level_graph.get(i).size() != 0; ++i ) {
             List<Integer> cur_level = level_graph.get(i);
             List<Integer> next_level = new LinkedList<>();
             for ( Integer node : cur_level ) {  // Add dist + 1 nodes
-                next_level.addAll(this.flow.get(node).stream().map(Highway::to).toList());
+                next_level.addAll(this.flow.get(node).stream()
+                        .map(Highway::to)
+                        .toList());
             }
-            if (next_level.size() > 0) {
+            if (next_level.stream()
+                    .noneMatch(x -> x % this.cities == this.cities - 1)) {
                 level_graph.add(next_level);
             } else {
+                level_graph.add(next_level.stream()
+                        .filter(x -> x % this.cities == this.cities - 1)
+                        .toList());
                 break;
             }
         }
