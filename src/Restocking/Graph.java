@@ -163,6 +163,7 @@ public class Graph {
         }
 
         for (int sink : sinks) {
+            int t_sink = sink;
             if (pred[sink] != null) {
                 int df = Integer.MAX_VALUE;
 
@@ -173,7 +174,7 @@ public class Graph {
 
                     List<Highway> lh = this.flow.get(cur);
                     for ( int i = 0; i < lh.size(); i++ ) {
-                        if ( lh.get(i).to() != sink ) {
+                        if ( lh.get(i).to() != t_sink ) {
                             lh.remove(lh.get(i));
                             i--;
                         }
@@ -181,7 +182,13 @@ public class Graph {
 
                     df = Math.min(df, lh.stream().mapToInt(Highway::capacity).sum());
 
-                    sink = cur;
+                    if (pred[cur] != null) {
+                        q.addAll(pred[cur]);
+                        t_sink = cur;
+                    } else {
+
+                        t_sink = sink;
+                    }
                 }
 
 
