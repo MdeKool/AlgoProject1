@@ -21,10 +21,10 @@ public class Main {
                 g.makeHighway(reader.nextLine());
             }
 
-            System.out.println(g);
+            //System.out.println(g);
             g.preprocess();
             g.process();
-            g.edmondsKarp();
+            System.out.println(g.edmondsKarp());
 
             long et = System.nanoTime();
 
