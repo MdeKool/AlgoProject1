@@ -19,7 +19,7 @@ public class Graph {
         for (int c = 0; c < cities; c++) {
             List<Highway> outgoing = new LinkedList<>();
             highways.add(outgoing);
-            for (int t = 0; t < time; t++) {
+            for (int t = 0; t <= time; t++) {
                 flow.add(new LinkedList<>());
             }
         }
@@ -47,18 +47,15 @@ public class Graph {
         }
     }
 
-    public int run() {
-        this.preprocess();
-        return this.edmondsKarp();
-    }
-
-    private void preprocess() {
-        this.find_paths(0, 0, new Highway(0, 0, 0, 0, MAX_VALUE, MAX_VALUE));
-        for (List<Highway> city : this.highways) { // removed legacy check:  h.min_dist_to_dest() < 0 ||
-            city.removeIf(h -> h.min_dist_to_dest() > this.time || h.fastest_path() > this.time);
-        }
+    public void preprocess() {
+        long st = System.nanoTime();
+        
         System.out.println("Prune result:");
         System.out.println(this);
+        
+        long et = System.nanoTime();
+        System.out.println("preprocess(): " + (et - st)/1000000 + " ms");
+        
         create_time_expanded_graph();
     }
 
@@ -99,6 +96,32 @@ public class Graph {
         }
         pred.set_fastest_path(fastest_path);
         return shortest_child_path + pred.length();
+    }
+
+    public int dinic() {
+
+
+        List<List<Integer>> level_graph = new LinkedList<>();
+        List<Integer> level_0 = new LinkedList<>();
+        for ( int t = 0; t <= this.time; t++ ) {
+            level_0.add(t*this.cities);
+        }
+        level_graph.add(level_0);
+
+        for ( int i = 0; level_graph.get(i).size() != 0; ++i ) {
+            List<Integer> cur_level = level_graph.get(i);
+            List<Integer> next_level = new LinkedList<>();
+            for ( Integer node : cur_level ) {  // Add dist + 1 nodes
+                next_level.addAll(this.flow.get(node).stream().map(Highway::to).toList());
+            }
+            if (next_level.size() > 0) {
+                level_graph.add(next_level);
+            } else {
+                break;
+            }
+        }
+
+        return 0 + dinic();
     }
 
     private void create_time_expanded_graph() {
@@ -144,28 +167,28 @@ public class Graph {
         }
     }
 
-    private int edmondsKarp() {
-        int max_flow = 0;
+    public int edmondsKarp() {
+        long st = System.nanoTime();
 
-        int[] sources = new int[this.time];
-        Arrays.setAll(sources, p -> p * this.time);
-        int[] sinks = new int[this.time];
-        Arrays.setAll(sinks, p -> (p+1) * this.time - 1);
+        int[] sources = new int[this.time+1];
+        Arrays.setAll(sources, p -> p * this.cities);
+        int[] sinks = new int[this.time+1];
+        Arrays.setAll(sinks, p -> (p+1) * this.cities - 1);
 
-        LinkedList<Integer>[] pred = new LinkedList[this.flow.size()];
+        ArrayList<Integer>[] pred = new ArrayList[this.flow.size()];
 
         Stack<Integer> q = new Stack<>();
 
-        for (int source : sources) {
-            q.push(source);
+        for (int i = 0; this.flow.get(sources[i]).size() != 0; i++) {
+            q.push(sources[i]);
 
             while(!q.isEmpty()) {
                 Integer cur = q.pop();
 
                 for (Highway h : this.flow.get(cur)) {
-                    if (h.to() < this.time*this.cities && h.to() % this.cities != 0 && h.capacity() > h.flow()) {
+                    if (h.to() < this.flow.size() && h.to() % this.cities != 0 && h.capacity() > h.flow()) {
                         if (pred[h.to()] == null) {
-                            pred[h.to()] = new LinkedList<>();
+                            pred[h.to()] = new ArrayList<>();
                         }
                         pred[h.to()].add(h.from());
                         q.push(h.to());
@@ -177,38 +200,48 @@ public class Graph {
         for (int sink : sinks) {
             int t_sink = sink;
             if (pred[sink] != null) {
-                int df = Integer.MAX_VALUE;
-
-                q.addAll(pred[sink]);
-
-                while(!q.isEmpty()) {
-                    Integer cur = q.pop();
-
-                    List<Highway> lh = this.flow.get(cur);
-                    for ( int i = 0; i < lh.size(); i++ ) {
-                        if ( lh.get(i).to() != t_sink ) {
-                            lh.remove(lh.get(i));
-                            i--;
-                        }
-                    }
-
-                    df = Math.min(df, lh.stream().mapToInt(Highway::capacity).sum());
-
-                    if (pred[cur] != null) {
-                        q.addAll(pred[cur]);
-                        t_sink = cur;
-                    } else {
-
-                        t_sink = sink;
-                    }
-                }
-
-
-
+                List<Integer> path = new LinkedList<>();
+                this.ek(path, sink, pred);
             }
         }
 
-        return max_flow;
+        long et = System.nanoTime();
+
+        System.out.println("edmondsKarp(): " + (et - st)/1000000 + "ms");
+
+        return this.flow.stream()
+                .mapToInt(lh -> lh.stream()
+                        .filter(x -> x.to() % this.cities == this.cities-1)
+                        .mapToInt(Highway::flow)
+                        .sum())
+                .sum();
+    }
+
+    private void ek(List<Integer> path, int p, List<Integer>[] pred) {
+        path.add(0, p);
+        if ( pred[p] != null ) {
+            for (Integer x : pred[p]) {
+                this.ek(path, x, pred);
+            }
+        } else {
+            int df = Integer.MAX_VALUE;
+            for ( int i = 0; i < path.size() - 1; i++) {
+                for ( Highway h : this.flow.get(path.get(i)) ) {
+                    if ( h.to() == path.get(i+1) ) {
+                        df = Math.min(df, h.capacity() - h.flow());
+                    }
+                }
+            }
+            for ( int i = 0; i < path.size() - 1; i++) {
+                for ( Highway h : this.flow.get(path.get(i)) ) {
+                    if ( h.to() == path.get(i+1) ) {
+                        h.addFlow(df);
+                    }
+                }
+            }
+
+        }
+        path.remove(0);
     }
 
     public String toString() {
