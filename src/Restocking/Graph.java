@@ -47,15 +47,20 @@ public class Graph {
     }
 
     public void preprocess() {
+        long st = System.nanoTime();
         this.find_paths(0, 0, new Highway(0, 0, 0, 0, MAX_VALUE, MAX_VALUE));
         for (List<Highway> city : this.highways) {
             city.removeIf(h -> h.min_dist_to_dest() < 0 || h.fastest_path() > this.time);
         }
+        long et = System.nanoTime();
+
+        System.out.println("Preprocess(): " + (et - st)/1000000 + "ms");
 //        System.out.println("Prune result:");
 //        System.out.println(this);
     }
 
     public void process() {
+        long st = System.nanoTime();
         BitSet visited = new BitSet(this.cities*this.time);
         for (int t = 0; t < this.time; t++) {
             visited.set(t*this.cities);
@@ -82,6 +87,9 @@ public class Graph {
                 }
             }
         }
+        long et = System.nanoTime();
+
+        System.out.println("Process(): " + (et - st)/1000000 + " ms");
 
 //        System.out.println("added: " + added);
 //        for (int c = 0; c < this.cities; c++) {
@@ -130,8 +138,39 @@ public class Graph {
         return shortest_child_path + pred.length();
     }
 
+    public int dinic() {
+
+
+        List<List<Integer>> level_graph = new LinkedList<>();
+        List<Integer> level_0 = new LinkedList<>();
+        for ( int t = 0; t <= this.time; t++ ) {
+            level_0.add(t*this.cities);
+        }
+        level_graph.add(level_0);
+
+        for ( int i = 0; level_graph.get(i).size() != 0; ++i ) {
+            List<Integer> cur_level = level_graph.get(i);
+            List<Integer> next_level = new LinkedList<>();
+            for ( Integer node : cur_level ) {  // Add dist + 1 nodes
+                next_level.addAll(this.flow.get(node).stream().map(Highway::to).toList());
+            }
+            if (next_level.size() > 0) {
+                level_graph.add(next_level);
+            } else {
+                break;
+            }
+        }
+
+        return 0 + dinic();
+    }
+
+    public int recursive_dinic() {
+
+        return 0;
+    }
+
     public int edmondsKarp() {
-        //int max_flow = 0;
+        long st = System.nanoTime();
 
         int[] sources = new int[this.time+1];
         Arrays.setAll(sources, p -> p * this.cities);
@@ -167,7 +206,9 @@ public class Graph {
             }
         }
 
+        long et = System.nanoTime();
 
+        System.out.println("edmondsKarp(): " + (et - st)/1000000 + "ms");
 
         return this.flow.stream()
                 .mapToInt(lh -> lh.stream()
