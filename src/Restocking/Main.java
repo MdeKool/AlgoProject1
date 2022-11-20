@@ -21,11 +21,9 @@ public class Main {
                 g.makeHighway(reader.nextLine());
             }
 
-            //System.out.println(g);
-            g.preprocess();
-            g.process();
-            g.dinic();
-            //System.out.println(g.edmondsKarp());
+            System.out.println(g);
+            int result = g.run();
+            System.out.println(result);
 
             long et = System.nanoTime();
 

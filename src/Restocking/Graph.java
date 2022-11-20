@@ -9,6 +9,7 @@ public class Graph {
     private final Map<String, Integer> highwaysMap;
     private final List<List<Highway>> highways;
     private final List<List<Highway>> flow;
+    private int shortest_path = MAX_VALUE;
 
     public Graph(int cities, int time) {
         this.cities = cities;
@@ -48,91 +49,50 @@ public class Graph {
 
     public void preprocess() {
         long st = System.nanoTime();
-        this.find_paths(0, 0, new Highway(0, 0, 0, 0, MAX_VALUE, MAX_VALUE));
-        for (List<Highway> city : this.highways) {
-            city.removeIf(h -> h.min_dist_to_dest() < 0 || h.fastest_path() > this.time);
-        }
+        
+        System.out.println("Prune result:");
+        System.out.println(this);
+        
         long et = System.nanoTime();
-
-        System.out.println("Preprocess(): " + (et - st)/1000000 + "ms");
-//        System.out.println("Prune result:");
-//        System.out.println(this);
-    }
-
-    public void process() {
-        long st = System.nanoTime();
-        BitSet visited = new BitSet(this.cities*this.time);
-        for (int t = 0; t < this.time; t++) {
-            visited.set(t*this.cities);
-        }
-
-        int added = 0;
-        for (int c = 0; c < this.cities; c++) {
-            for (int t = 0; t < this.time; t++) {
-                if (visited.get(c+t*this.cities)) {
-                    for (Highway h : this.highways.get(c)) {
-                        if (this.time >= t + h.min_dist_to_dest()) {
-                            List<Highway> lh = this.flow.get(c+t*this.cities);
-                            Highway nh = new Highway(c+t*this.cities,
-                                    h.to() + (t + h.length()) * this.cities,
-                                    h.capacity(),
-                                    h.length(),
-                                    h.min_dist_to_dest(),
-                                    h.fastest_path());
-                            lh.add(nh);
-                            visited.set(h.to()+(t+h.length())*this.cities);
-                            added++;
-                        }
-                    }
-                }
-            }
-        }
-        long et = System.nanoTime();
-
-        System.out.println("Process(): " + (et - st)/1000000 + " ms");
-
-//        System.out.println("added: " + added);
-//        for (int c = 0; c < this.cities; c++) {
-//            for (int t = 0; t < this.time; t++) {
-//                if (visited.get(c+t*this.cities) && this.flow.get(c+t*this.cities).size() > 0) {
-//                    System.out.println(c + "_" + t + "\t" + this.flow.get(c+t*this.cities));
-//                }
-//            }
-//        }
+        System.out.println("preprocess(): " + (et - st)/1000000 + " ms");
+        
+        create_time_expanded_graph();
     }
 
     private int find_paths(int source, int length, Highway pred) {
-        if (length > this.time) { // no path
+        if (length > this.time) // no path with length < time
             return -1;
-        }
 
-        if (source == cities - 1) {
+        if (source == cities - 1) { // destination reached, update accordingly
             pred.set_min_dist_to_dest(pred.length());
-            pred.set_fastest_path(Math.min(pred.fastest_path() ,length));
+            pred.set_fastest_path(Math.min(pred.fastest_path(), length));
+            this.shortest_path = Math.min(this.shortest_path, pred.fastest_path());
             return pred.length();
         }
 
         int shortest_child_path = MAX_VALUE;
         int fastest_path = MAX_VALUE;
-        for (Highway highway : this.highways.get(source)) {
-
-            // discover
+        for (Highway highway : this.highways.get(source))
+        { // for each highway leaving city[source]
             int result;
+            // if a search that is minimally as deep as we can search has already been done, re-use that result
             if ( highway.min_dist_to_dest() >= MAX_VALUE
                     || highway.fastest_path() - highway.min_dist_to_dest() > length) {
                 result = find_paths(highway.to(), length + highway.length(), highway);
-            } else {
+            } else { // otherwise: search
                 result = highway.min_dist_to_dest();
             }
-
             if (result < 0) continue; // ignore path with no solution
 
+            // minimize on result
             shortest_child_path = Math.min(shortest_child_path, result);
             fastest_path = (Math.min(fastest_path, highway.fastest_path()));
         }
 
         if (shortest_child_path > 0 ) {
             pred.set_min_dist_to_dest(shortest_child_path + pred.length());
+        } else { // negative weight cycle detected
+            System.out.println(source + " has a negative shortest path, negative weight cycle?");
         }
         pred.set_fastest_path(fastest_path);
         return shortest_child_path + pred.length();
@@ -164,9 +124,47 @@ public class Graph {
         return 0 + dinic();
     }
 
-    public int recursive_dinic() {
+    private void create_time_expanded_graph() {
+        BitSet visited = new BitSet(this.cities*this.time);
+        for (int t = 0; t < this.time; t++) {
+            visited.set(t*this.cities);
+        }
 
-        return 0;
+        int added = 0;
+        for (int c = 0; c < this.cities; c++)
+        { // for each city
+            for (int t = 0; t < this.time - this.shortest_path; t++)
+            { // for each possible time-frame (do not run time for which no paths exist.
+                if (visited.get(c+t*this.cities))
+                { // if city_time 'c_t' has been visited
+                    for (Highway h : this.highways.get(c))
+                    { // for each outgoing highway
+                        if (this.time >= t + h.min_dist_to_dest())
+                        { // if destination can still be reached using this highway
+                            // add highway from city_time to dest_time+length
+                            this.flow.get(c+t*this.cities).add(
+                                    new Highway(c+t*this.cities,
+                                        h.to() + (t+h.length())*this.time,
+                                        h.capacity(), h.length(),
+                                        h.min_dist_to_dest(), h.fastest_path()
+                                    )
+                            ); added++;
+                            // mark dest_time+length as visited
+                            visited.set(h.to()+(t+h.length())*this.cities);
+                        }
+                    }
+                }
+            }
+        }
+
+        System.out.println("added: " + added);
+        for (int c = 0; c < this.cities; c++) {
+            for (int t = 0; t < this.time; t++) {
+                if (visited.get(c+t*this.cities) && this.flow.get(c+t*this.cities).size() > 0) {
+                    System.out.println(c + "_" + t + "\t" + this.flow.get(c+t*this.cities));
+                }
+            }
+        }
     }
 
     public int edmondsKarp() {
@@ -200,6 +198,7 @@ public class Graph {
         }
 
         for (int sink : sinks) {
+            int t_sink = sink;
             if (pred[sink] != null) {
                 List<Integer> path = new LinkedList<>();
                 this.ek(path, sink, pred);
@@ -223,7 +222,6 @@ public class Graph {
         if ( pred[p] != null ) {
             for (Integer x : pred[p]) {
                 this.ek(path, x, pred);
-
             }
         } else {
             int df = Integer.MAX_VALUE;
