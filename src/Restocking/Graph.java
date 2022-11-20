@@ -1,6 +1,7 @@
 package Restocking;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Graph {
     private final int cities;
@@ -162,6 +163,14 @@ public class Graph {
                 .filter(x -> this.flow.get(x).size() > 0)
                 .toList());
 
+        for ( Integer i : level_graph.get(0) ) {
+            for ( Integer j : this.flow.get(i).stream().map(Highway::from).toList() ) {
+                List<Integer> p = new LinkedList<>();
+                p.add(j);
+                paths.add(p);
+            }
+        }
+
         // Make level graph (i.e, graph of all shortest paths)
         for ( int i = 0; level_graph.get(i).size() != 0; ++i ) {
             List<Integer> cur_level = level_graph.get(i);
@@ -183,15 +192,26 @@ public class Graph {
         }
 
         // Fill each path
+        int depth = level_graph.size();
         for ( List<Integer> path : paths ){
-            recursive_dinic(level_graph, path);
+            recursive_dinic(level_graph, path, depth);
         }
 
         return 0 + dinic();
     }
 
-    private int recursive_dinic(List<List<Integer>> level_graph, List<Integer> path) {
-        List<>
+    private void recursive_dinic(List<List<Integer>> level_graph, List<Integer> path, int depth) {
+        if (path.size() != depth) {
+            for ( Highway h : this.flow.get(path.get(path.size() - 1 ))) {
+                if ( h.flow() < h.capacity() ) {
+                    path.add(h.to());
+                    break;
+                }
+            }
+            recursive_dinic(level_graph, path, depth);
+        }
+
+        //return 0;
     }
 
     private void create_time_expanded_graph() {
